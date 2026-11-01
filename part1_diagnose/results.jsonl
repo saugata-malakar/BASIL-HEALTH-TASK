@@ -1,3 +1,3 @@
 {"channels": "all", "seed": 0, "best_epoch": 4, "test_acc": 0.5833333333333334, "n_test": 84}
-{"channels": "frontal", "seed": 0, "best_epoch": 15, "test_acc": 0.7380952380952381, "n_test": 84}
-{"channels": "frontal", "seed": 0, "best_epoch": 3, "test_acc": 0.7380952380952381, "n_test": 84}
+{"channels": "frontal", "seed": 0, "best_epoch": 15, "test_acc": 0.7380952380952381, "n_test": 84, "l_freq": 1.0, "h_freq": 40.0}
+{"channels": "frontal", "seed": 0, "best_epoch": 3, "test_acc": 0.5, "n_test": 84, "l_freq": 8.0, "h_freq": 40.0}

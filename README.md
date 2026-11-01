@@ -133,6 +133,9 @@ python main.py                                # Runs EEGNet, Vanilla Transformer
 The repository preserves the atomic, un-squashed commit history required by the rubric:
 
 ```text
+(latest) Final submission polish: improve code comments, docstrings, CLI ablation support, and README sync
+0868d70 Docs: remove emojis from README.md for professional submission formatting
+8e206c0 Docs: polish root README.md with executive overview, benchmark tables, and reproduction guide
 ae4cf3b Part 2: synchronize README.md with Phase-Cancellation Theorem and link directly to ANSWERS.md
 057f20c Documentation: update ANSWERS.md with 6-bug breakdown, EOG causal double-dissociation, 3-factor Cz, and phase-cancellation theorem
 d9e7203 Part 1: refine pure frontal electrode group, add erd_beta.png, update results.jsonl
