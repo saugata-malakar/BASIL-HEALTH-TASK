@@ -6,7 +6,7 @@
 
 ---
 
-## 🌟 Executive Summary & Key Results
+## Executive Summary & Key Results
 
 This repository contains the complete implementation, bug diagnostics, neurophysiological analysis, and attention-based architecture experiments for the bilateral motor imagery task (**both fists vs. both feet**) on the PhysioNet EEGBCI benchmark (10 subjects, 64 channels, 160 Hz).
 
@@ -23,7 +23,7 @@ This repository contains the complete implementation, bug diagnostics, neurophys
 
 ---
 
-## 📊 Benchmark Summary Table
+## Benchmark Summary Table
 
 | Model Architecture | Input Tokens | Attention Entries / Head | Test Accuracy (Cross-Subject) | Variance Across Seeds | Architectural Role |
 |---|:---:|:---:|:---:|:---:|---|
@@ -33,7 +33,7 @@ This repository contains the complete implementation, bug diagnostics, neurophys
 
 ---
 
-## 🛠️ Part 1: All 6 Planted Defects (+ Bonus 7th & MNE Boundary Finding)
+## Part 1: All 6 Planted Defects (+ Bonus 7th & MNE Boundary Finding)
 
 | Bug # | Location | Defect Description | Direction on Accuracy | Solution Implemented |
 |:---:|---|---|:---:|---|
@@ -48,7 +48,7 @@ This repository contains the complete implementation, bug diagnostics, neurophys
 
 ---
 
-## 🔬 Key Scientific & Neurophysiological Findings
+## Key Scientific & Neurophysiological Findings
 
 ### 1. Task 2: Somatotopy & Three-Factor Analysis of Attenuated `Cz`
 * **Lateral Motor Cortex (`C3`/`C4`):** Pronounced, bilateral $\mu$-band ($8\text{--}13\text{ Hz}$) desynchronisation during hands imagery ($T_1$), matching the upper limb homuncular representation on the precentral gyrus.
@@ -72,7 +72,7 @@ This repository contains the complete implementation, bug diagnostics, neurophys
 
 ---
 
-## 📁 Repository Map & Artifacts
+## Repository Map & Artifacts
 
 ```
 .
@@ -101,7 +101,7 @@ This repository contains the complete implementation, bug diagnostics, neurophys
 
 ---
 
-## ⚡ Reproduction Guide
+## Reproduction Guide
 
 ### Environment Setup
 ```bash
@@ -128,7 +128,7 @@ python main.py                                # Runs EEGNet, Vanilla Transformer
 
 ---
 
-## 📜 Un-Squashed Atomic Git Commit History
+## Un-Squashed Atomic Git Commit History
 
 The repository preserves the atomic, un-squashed commit history required by the rubric:
 
