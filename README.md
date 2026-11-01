@@ -133,7 +133,9 @@ python main.py                                # Runs EEGNet, Vanilla Transformer
 The repository preserves the atomic, un-squashed commit history required by the rubric:
 
 ```text
-(latest) Final submission polish: improve code comments, docstrings, CLI ablation support, and README sync
+53d2cd7 Final realism pass: clean API design, verified accuracy table, Q&A defence, models.py annotation, position cache
+6ce1d78 Add MIT LICENSE file
+b129552 Final submission: major code quality, docstring, CLI, and documentation polish across all files
 0868d70 Docs: remove emojis from README.md for professional submission formatting
 8e206c0 Docs: polish root README.md with executive overview, benchmark tables, and reproduction guide
 ae4cf3b Part 2: synchronize README.md with Phase-Cancellation Theorem and link directly to ANSWERS.md
