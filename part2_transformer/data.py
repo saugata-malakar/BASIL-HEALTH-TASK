@@ -29,6 +29,10 @@ TEST_SUBJECTS = [9, 10]                   # held-out subjects -> cross-subject
 TMIN, TMAX = 0.0, 3.0                     # 3 s window -> 481 samples at 160 Hz
 L_FREQ, H_FREQ = 7.0, 30.0               # mu + beta
 
+# Module-level cache so get_channel_positions() does not re-filter raw on
+# every call (e.g. once per seed in run_across_seeds).
+_cached_channel_positions = None
+
 
 def _load_subjects(subjects):
     raws = []
@@ -54,11 +58,26 @@ def _load_subjects(subjects):
     return X, y
 
 
-def get_channel_positions():
-    """3D electrode coordinates (C, 3), aligned to the channel order in X.
+_cached_channel_positions = None   # module-level cache — computed once per session
 
-    Handy if your idea uses electrode geometry as a structural/positional prior.
+
+def get_channel_positions():
+    """Return 3D electrode coordinates (C, 3) aligned to the channel order in X.
+
+    The coordinates are loaded from MNE's standard_1005 montage and are
+    cached after the first call so repeated invocations (e.g. per seed in
+    run_across_seeds) do not re-filter the raw file unnecessarily.
+
+    Returns
+    -------
+    pos : float32 array (C, 3)  -- columns are x (left-right), y (AP), z (sup-inf)
+          in head-coordinate metres.  The Y column is the anterior-posterior axis
+          used by YourModel's positional embedding warm-start.
     """
+    global _cached_channel_positions
+    if _cached_channel_positions is not None:
+        return _cached_channel_positions
+
     fnames = eegbci.load_data(1, RUNS[:1], verbose="ERROR")
     raw = concatenate_raws(
         [read_raw_edf(f, preload=True, verbose="ERROR") for f in fnames])
@@ -68,6 +87,7 @@ def get_channel_positions():
     raw.filter(L_FREQ, H_FREQ, fir_design="firwin", verbose="ERROR")
     picks = mne.pick_types(raw.info, eeg=True, exclude="bads")
     pos = np.array([raw.info["chs"][p]["loc"][:3] for p in picks], dtype="float32")
+    _cached_channel_positions = pos
     return pos
 
 

@@ -75,25 +75,21 @@ def main() -> None:
     set_seed(args.seed)
 
     # ------------------------------------------------------------------
-    # Data loading — support optional frequency override for ablation runs.
-    # When --l_freq / --h_freq are provided we re-filter inside build_dataset
-    # by monkey-patching the module constants so erd.py's load_raw path is
-    # reused unchanged.  This keeps the ablation transparent.
+    # Data loading — frequency override for ablation runs (Task 3).
+    # l_freq / h_freq are passed as explicit arguments to build_dataset()
+    # and forwarded to epoch_subject() — no monkey-patching needed.
     # ------------------------------------------------------------------
-    import data as _data
-    l_freq_used = args.l_freq if args.l_freq is not None else _data.L_FREQ
-    h_freq_used = args.h_freq if args.h_freq is not None else _data.H_FREQ
-    if args.l_freq is not None or args.h_freq is not None:
-        # Temporarily patch module-level constants used inside epoch_subject().
-        _orig_l, _orig_h = _data.L_FREQ, _data.H_FREQ
-        _data.L_FREQ, _data.H_FREQ = l_freq_used, h_freq_used
-        print(f"[ABLATION] Re-filtering with {l_freq_used}–{h_freq_used} Hz "
-              f"(default was {_orig_l}–{_orig_h} Hz)")
-
-    X, y, groups, ch_names = build_dataset(args.subjects)
+    from data import L_FREQ as DEFAULT_L, H_FREQ as DEFAULT_H
+    l_freq_used = args.l_freq if args.l_freq is not None else DEFAULT_L
+    h_freq_used = args.h_freq if args.h_freq is not None else DEFAULT_H
 
     if args.l_freq is not None or args.h_freq is not None:
-        _data.L_FREQ, _data.H_FREQ = _orig_l, _orig_h  # restore
+        print(f"[ABLATION] Filtering {l_freq_used}–{h_freq_used} Hz "
+              f"(default: {DEFAULT_L}–{DEFAULT_H} Hz) — EOG step-frequency ablation.")
+
+    X, y, groups, ch_names = build_dataset(args.subjects,
+                                            l_freq=l_freq_used,
+                                            h_freq=h_freq_used)
 
     # ------------------------------------------------------------------
     # Channel selection.

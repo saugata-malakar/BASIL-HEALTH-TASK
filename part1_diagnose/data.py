@@ -5,8 +5,8 @@ Task    : Imagined opening/closing of BOTH FISTS (T1) vs BOTH FEET (T2).
 Reference: Goldberger et al. (2000), Schalk et al. (2004). PhysioNet EEGBCI.
 
 Protocol notes (critical for Bug 1):
-  Runs 5, 9, 13  → REAL (overt) bilateral movement  — WRONG for this task.
-  Runs 6, 10, 14 → IMAGINED bilateral movement       — CORRECT (motor imagery).
+  Runs 5, 9, 13  -> REAL (overt) bilateral movement  -- WRONG for this task.
+  Runs 6, 10, 14 -> IMAGINED bilateral movement       -- CORRECT (motor imagery).
   Loading the wrong runs inflates accuracy by classifying peripheral EMG
   artefacts (~10-100x larger than cortical EEG) rather than true imagery.
 """
@@ -14,7 +14,7 @@ import numpy as np
 import mne
 from mne.datasets import eegbci
 
-# Built-in template montage (renamed in MNE ≥ 1.2; fall back to standard_1005).
+# Built-in template montage (renamed in MNE >= 1.2; fall back to standard_1005).
 MONTAGE = (
     "colin27_1005"
     if "colin27_1005" in mne.channels.get_builtin_montages()
@@ -25,20 +25,22 @@ MONTAGE = (
 # BUG 1 FIX: original starter had [5, 9, 13] (overt movement). Correct: [6, 10, 14].
 RUNS = [6, 10, 14]
 
-SUBJECTS = list(range(1, 11))  # subjects 1–10
+SUBJECTS = list(range(1, 11))  # subjects 1-10
 
-# Broadband filter applied to the continuous recording before epoching.
-# train.py may temporarily override these for frequency-band ablation studies.
+# Default broadband filter applied to the continuous recording before epoching.
+# Callers may pass l_freq/h_freq overrides to epoch_subject() and build_dataset()
+# for frequency-band ablation experiments (see Task 3 in train.py).
 L_FREQ, H_FREQ = 1.0, 40.0
 
 # Epoch window relative to cue onset (s).
-# NOTE: TMAX=5.0 extends 0.9 s into the run boundary seam.  MNE inserts a
-# BAD boundary annotation at concatenation points, so the 15th trial of each
-# run (whose [TMIN, TMAX] window crosses that boundary) is silently dropped.
-# With 3 runs × 10 subjects × 15 trials each = 450 expected; 420 are returned.
+# NOTE on MNE boundary trial dropping:
+#   mne.concatenate_raws() inserts a BAD boundary annotation at each run seam.
+#   With TMAX = 5.0 the epoch window extends 0.9 s past the run boundary for
+#   the 15th (last) trial of each run, causing MNE to silently reject it.
+#   Result: 3 runs x 10 subjects x 14 retained trials = 420 trials (not 450).
 TMIN, TMAX = -2.0, 5.0
 
-# Temporal crop passed to the network (avoids pre-cue and post-imagery noise).
+# Temporal crop fed to the network (discards pre-cue baseline and post-imagery).
 CROP = (0.0, 4.0)
 
 EVENT_ID = dict(hands=1, feet=2)
@@ -48,7 +50,7 @@ def load_raw(subject: int, runs: list = RUNS):
     """Download (first call only) and concatenate the requested runs as one Raw.
 
     eegbci.standardize() normalises inconsistent channel naming across subjects
-    (e.g., 'Fcz' → 'FCz', 'C3.' → 'C3') so ch_names are stable across calls.
+    ('Fcz' -> 'FCz', 'C3.' -> 'C3', etc.) so ch_names are stable across calls.
     """
     files = eegbci.load_data(subject, runs)
     raws  = [mne.io.read_raw_edf(f, preload=True, verbose="error") for f in files]
@@ -67,28 +69,62 @@ def get_events(raw):
     return events
 
 
-def epoch_subject(subject: int):
-    """Return X (n_trials, 64, n_times) in microvolts, y (0=hands, 1=feet), ch_names.
+def epoch_subject(subject: int,
+                  l_freq: float = L_FREQ,
+                  h_freq: float = H_FREQ):
+    """Return (X, y, ch_names) for one subject.
 
-    Filtering uses the module-level L_FREQ / H_FREQ, which train.py may override
-    temporarily for the frequency-band ablation experiment (Task 3).
+    Parameters
+    ----------
+    subject : int
+        Subject number (1-10).
+    l_freq  : float
+        Band-pass lower edge in Hz (default L_FREQ = 1.0 Hz).
+        Pass a higher value (e.g. 8.0) for the EOG-ablation experiment
+        to strip out sub-8 Hz ocular step potentials.
+    h_freq  : float
+        Band-pass upper edge in Hz (default H_FREQ = 40.0 Hz).
+
+    Returns
+    -------
+    X        : float32 array (n_trials, n_channels, n_times) in microvolts.
+    y        : int64 array (n_trials,)  0 = hands, 1 = feet.
+    ch_names : list[str]  channel names in the order they appear in X.
     """
     raw = load_raw(subject)
-    raw.filter(L_FREQ, H_FREQ, fir_design="firwin", verbose="error")
+    raw.filter(l_freq, h_freq, fir_design="firwin", verbose="error")
     events = get_events(raw)
     epochs = mne.Epochs(
         raw, events, EVENT_ID, TMIN, TMAX,
         baseline=None, preload=True, verbose="error")
-    X = epochs.copy().crop(*CROP).get_data(copy=True) * 1e6  # V → µV
-    y = epochs.events[:, 2] - 1                               # {1,2} → {0,1}
+    X = epochs.copy().crop(*CROP).get_data(copy=True) * 1e6   # V -> uV
+    y = epochs.events[:, 2] - 1                                # {1,2} -> {0,1}
     return X.astype(np.float32), y.astype(np.int64), epochs.ch_names
 
 
-def build_dataset(subjects: list = SUBJECTS):
-    """Stack epochs across all subjects. `groups` holds each trial's subject id."""
+def build_dataset(subjects: list = SUBJECTS,
+                  l_freq: float = L_FREQ,
+                  h_freq: float = H_FREQ):
+    """Stack epochs across all subjects.
+
+    Parameters
+    ----------
+    subjects : list[int]
+        Subject IDs to load (default: all 10).
+    l_freq, h_freq : float
+        Band-pass edges forwarded to epoch_subject().  Override for ablation
+        studies without monkey-patching module-level constants.
+
+    Returns
+    -------
+    X        : float32 (N, C, T) -- concatenated epochs across subjects.
+    y        : int64  (N,)       -- class labels.
+    groups   : int64  (N,)       -- subject ID for every trial.
+    ch_names : list[str]         -- channel names.
+    """
     Xs, ys, gs = [], [], []
     for s in subjects:
-        X, y, ch_names = epoch_subject(s)
+        X, y, ch_names = epoch_subject(s, l_freq=l_freq, h_freq=h_freq)
         Xs.append(X)
         ys.append(y)
         gs.append(np.full(len(y), s, dtype=np.int64))
