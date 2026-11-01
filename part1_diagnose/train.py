@@ -13,14 +13,13 @@ from data import build_dataset, SUBJECTS
 from model import EEGNet, count_params
 
 # Electrode groups for the channel-subset run (Task 3).
-# Frontal electrodes: the visual cue (top=fists, bottom=feet) would drive
-# frontal/occipital gaze artefacts. We pick a broad frontal strip to test
-# whether the model exploits this non-brain signal.
+# Pure prefrontal + frontal strip (strictly anterior to premotor FC* strip):
+# Excludes FC1-FC6, FCz to guarantee zero contamination from Supplementary Motor
+# Area (SMA) or premotor cortex via scalp volume conduction.
 CHANNEL_GROUPS = {
     "all": None,
-    "frontal": ["Fp1", "Fp2", "AF3", "AF4", "F7", "F5", "F3", "F1",
-                "Fz", "F2", "F4", "F6", "F8", "FC5", "FC3", "FC1",
-                "FCz", "FC2", "FC4", "FC6"],
+    "frontal": ["Fp1", "Fpz", "Fp2", "AF7", "AF3", "AFz", "AF4", "AF8",
+                "F7", "F5", "F3", "F1", "Fz", "F2", "F4", "F6", "F8"],
 }
 
 
